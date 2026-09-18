@@ -1,0 +1,450 @@
+// ============================================================
+// SCHEMA DE BASE DE DATOS - CiberSeguridad Estudiantil
+// Fase 2: Modelo de datos completo
+// ============================================================
+// Provider: PostgreSQL (Supabase).
+// La aplicación usa Prisma como ORM y Supabase como PostgreSQL administrado.
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================================
+// 1. USUARIOS, ROLES Y PERMISOS
+// (Estructura de datos únicamente; la lógica de autenticación,
+// sesiones y protección de rutas se implementa en la Fase 5)
+// ============================================================
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique // "ADMIN", "EDITOR", "ESTUDIANTE"
+  description String?
+  users       User[]
+  permissions RolePermission[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  key         String           @unique // ej: "articulos.crear", "usuarios.eliminar"
+  description String?
+  roles       RolePermission[]
+
+  @@map("permissions")
+}
+
+// Tabla puente para la relación muchos-a-muchos Role <-> Permission
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  passwordHash  String
+  avatarUrl     String?
+  active        Boolean   @default(true)
+  emailVerified DateTime?
+
+  resetToken        String?   @unique
+  resetTokenExpires DateTime?
+
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  publicaciones Publicacion[]           @relation("PublicacionAutor")
+  resultados    ResultadoEvaluacion[]
+  certificados  Certificado[]
+  insignias     UsuarioInsignia[]
+  sesiones      Session[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([roleId])
+  @@map("users")
+}
+
+// ============================================================
+// 1.1 SESIONES (Fase 5 — autenticación)
+// ============================================================
+// Sesiones del lado del servidor: el token opaco (no un JWT) vive en
+// esta tabla y se referencia desde una cookie httpOnly en el navegador.
+// Esto permite revocar sesiones al instante (logout real, no solo
+// borrar la cookie) y no depende de firmar/verificar tokens.
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@map("sessions")
+}
+
+// ============================================================
+// 2. CATEGORÍAS (compartidas entre publicaciones y recursos)
+// ============================================================
+
+model Categoria {
+  id          String   @id @default(cuid())
+  nombre      String
+  slug        String   @unique
+  descripcion String?
+
+  publicaciones Publicacion[]
+  recursos      Recurso[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("categorias")
+}
+
+// ============================================================
+// 3. PUBLICACIONES (Artículos y Noticias)
+// ============================================================
+// Decisión técnica: "Artículos" y "Noticias" comparten exactamente
+// los mismos campos (título, contenido, categoría, autor, SEO), por
+// lo que se modelan como una sola entidad "Publicacion" distinguida
+// por el campo `tipo`, evitando duplicación (principio DRY). El panel
+// administrativo seguirá mostrando "Noticias" y "Artículos" como
+// secciones separadas, filtrando por este campo.
+
+// Se mantienen strings para compatibilidad con la capa de validación existente;
+// los valores permitidos documentados aquí y validados por Zod en la
+// capa de aplicación (lib/validations/). Valores válidos: "ARTICULO" | "NOTICIA".
+
+model Publicacion {
+  id            String    @id @default(cuid())
+  tipo          String // "ARTICULO" | "NOTICIA"
+  titulo        String
+  slug          String    @unique
+  resumen       String?
+  contenido     String
+  imagenPortada String?
+  publicado     Boolean   @default(false)
+  publicadoEn   DateTime?
+
+  categoriaId String
+  categoria   Categoria @relation(fields: [categoriaId], references: [id])
+
+  autorId String
+  autor   User   @relation("PublicacionAutor", fields: [autorId], references: [id])
+
+  // SEO por publicación (ver también Configuracion para valores globales)
+  metaTitulo      String?
+  metaDescripcion String?
+  ogImagen        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoriaId])
+  @@index([autorId])
+  @@index([tipo, publicado])
+  @@map("publicaciones")
+}
+
+// ============================================================
+// 4. GLOSARIO
+// ============================================================
+
+model TerminoGlosario {
+  id         String   @id @default(cuid())
+  termino    String   @unique
+  definicion String
+  letra      String // primera letra del término, para el índice A-Z
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([letra])
+  @@map("glosario")
+}
+
+// ============================================================
+// 5. PREGUNTAS FRECUENTES
+// ============================================================
+
+model PreguntaFrecuente {
+  id        String  @id @default(cuid())
+  pregunta  String
+  respuesta String
+  categoria String?
+  orden     Int     @default(0)
+  publicada Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("faq")
+}
+
+// ============================================================
+// 6. RECURSOS
+// ============================================================
+
+// Valores válidos para Recurso.tipo:
+// "PDF" | "VIDEO" | "ENLACE" | "IMAGEN"
+
+model Recurso {
+  id          String  @id @default(cuid())
+  titulo      String
+  descripcion String?
+  tipo        String // "PDF" | "VIDEO" | "ENLACE" | "IMAGEN"
+  url         String
+
+  categoriaId String?
+  categoria   Categoria? @relation(fields: [categoriaId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoriaId])
+  @@map("recursos")
+}
+
+// ============================================================
+// 7. EVALUACIONES, PREGUNTAS Y RESULTADOS
+// ============================================================
+
+model Evaluacion {
+  id            String   @id @default(cuid())
+  titulo        String
+  descripcion   String?
+  puntajeMinimo Int      @default(70) // porcentaje requerido para aprobar
+  activa        Boolean  @default(true)
+
+  preguntas  Pregunta[]
+  resultados ResultadoEvaluacion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("evaluaciones")
+}
+
+// Valores válidos para Pregunta.tipo:
+// "OPCION_UNICA" | "OPCION_MULTIPLE" | "VERDADERO_FALSO"
+
+model Pregunta {
+  id           String     @id @default(cuid())
+  evaluacionId String
+  evaluacion   Evaluacion @relation(fields: [evaluacionId], references: [id], onDelete: Cascade)
+  enunciado    String
+  tipo         String     @default("OPCION_UNICA") // "OPCION_UNICA" | "OPCION_MULTIPLE" | "VERDADERO_FALSO"
+  orden        Int        @default(0)
+
+  opciones OpcionRespuesta[]
+
+  @@index([evaluacionId])
+  @@map("preguntas")
+}
+
+model OpcionRespuesta {
+  id         String   @id @default(cuid())
+  preguntaId String
+  pregunta   Pregunta @relation(fields: [preguntaId], references: [id], onDelete: Cascade)
+  texto      String
+  esCorrecta Boolean  @default(false)
+  orden      Int      @default(0)
+
+  @@index([preguntaId])
+  @@map("opciones_respuesta")
+}
+
+model ResultadoEvaluacion {
+  id           String     @id @default(cuid())
+  usuarioId    String
+  usuario      User       @relation(fields: [usuarioId], references: [id])
+  evaluacionId String
+  evaluacion   Evaluacion @relation(fields: [evaluacionId], references: [id])
+
+  puntaje      Int // porcentaje obtenido (0-100)
+  aprobado     Boolean
+  // Snapshot de respuestas de la evaluación. Se conserva como String porque la
+  // capa de aplicación ya serializa/deserializa este campo con JSON.stringify/parse.
+  respuestas   String
+  completadoEn DateTime @default(now())
+
+  certificado Certificado?
+
+  @@index([usuarioId])
+  @@index([evaluacionId])
+  @@map("resultados_evaluacion")
+}
+
+// ============================================================
+// 8. CERTIFICADOS
+// ============================================================
+
+model Certificado {
+  id            String   @id @default(cuid())
+  codigo        String   @unique @default(cuid()) // código verificable públicamente
+  usuarioId     String
+  usuario       User     @relation(fields: [usuarioId], references: [id])
+  resultadoId   String   @unique
+  resultado     ResultadoEvaluacion @relation(fields: [resultadoId], references: [id])
+  archivoPdfUrl String?
+  emitidoEn     DateTime @default(now())
+
+  @@index([usuarioId])
+  @@map("certificados")
+}
+
+// ============================================================
+// 9. INSIGNIAS (gamificación)
+// ============================================================
+
+model Insignia {
+  id          String   @id @default(cuid())
+  nombre      String   @unique
+  descripcion String?
+  icono       String?
+  criterio    String? // descripción de cómo se obtiene
+
+  usuarios UsuarioInsignia[]
+
+  createdAt DateTime @default(now())
+
+  @@map("insignias")
+}
+
+model UsuarioInsignia {
+  usuarioId  String
+  insigniaId String
+  usuario    User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  insignia   Insignia @relation(fields: [insigniaId], references: [id], onDelete: Cascade)
+  obtenidaEn DateTime @default(now())
+
+  @@id([usuarioId, insigniaId])
+  @@map("usuario_insignias")
+}
+
+// ============================================================
+// 10. CONFIGURACIÓN GENERAL DEL SITIO (patrón singleton)
+// ============================================================
+// Se fuerza un único registro usando siempre id = "singleton".
+
+model Configuracion {
+  id String @id @default("singleton")
+
+  nombreSitio      String  @default("CiberSeguridad Estudiantil")
+  descripcionSitio String?
+  logoUrl          String?
+  faviconUrl       String?
+
+  emailContacto    String?
+  telefonoContacto String?
+  direccion        String?
+
+  facebookUrl  String?
+  twitterUrl   String?
+  instagramUrl String?
+  linkedinUrl  String?
+  youtubeUrl   String?
+
+  // SEO global por defecto (se usa cuando una página no define el suyo)
+  metaTituloDefault      String?
+  metaDescripcionDefault String?
+  ogImagenDefault        String?
+  googleAnalyticsId      String?
+
+  updatedAt DateTime @updatedAt
+
+  @@map("configuracion")
+}
+
+// ============================================================
+// 11. BANNERS Y CARRUSELES
+// ============================================================
+// El campo `grupo` permite tener varios carruseles independientes
+// (ej: "home-hero", "sidebar-promos") reutilizando el mismo modelo.
+
+model Banner {
+  id          String    @id @default(cuid())
+  grupo       String
+  titulo      String?
+  subtitulo   String?
+  imagenUrl   String
+  enlaceUrl   String?
+  orden       Int       @default(0)
+  activo      Boolean   @default(true)
+  fechaInicio DateTime?
+  fechaFin    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([grupo, activo])
+  @@map("banners")
+}
+
+// ============================================================
+// 12. MENÚS (header y footer)
+// ============================================================
+
+// Valores válidos para ItemMenu.ubicacion:
+// "HEADER" | "FOOTER"
+
+model ItemMenu {
+  id                  String  @id @default(cuid())
+  etiqueta            String
+  url                 String
+  ubicacion           String // "HEADER" | "FOOTER"
+  orden               Int     @default(0)
+  abrirEnNuevaPestana Boolean @default(false)
+
+  padreId String?
+  padre   ItemMenu?  @relation("SubMenu", fields: [padreId], references: [id], onDelete: Cascade)
+  hijos   ItemMenu[] @relation("SubMenu")
+
+  @@index([ubicacion])
+  @@map("items_menu")
+}
+
+// ============================================================
+// 13. CONTENIDO DE LA PÁGINA DE INICIO (patrón singleton)
+// ============================================================
+
+model ContenidoInicio {
+  id String @id @default("singleton")
+
+  heroTitulo    String  @default("Aprende a protegerte en el mundo digital")
+  heroSubtitulo String?
+  heroImagenUrl String?
+  heroCtaTexto  String?
+  heroCtaUrl    String?
+
+  // Estructura flexible para secciones adicionales de la home
+  // (orden, tipo de sección, contenido) sin necesitar nuevas tablas
+  // por cada bloque visual que se agregue en el futuro.
+  // Se conserva como String para mantener la compatibilidad con la capa de aplicación.
+  seccionesJson String?
+
+  updatedAt DateTime @updatedAt
+
+  @@map("contenido_inicio")
+}
