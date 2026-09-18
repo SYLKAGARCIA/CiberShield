@@ -4,6 +4,7 @@
   "private": true,
   "description": "Plataforma educativa de concientización en ciberseguridad para estudiantes universitarios.",
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
