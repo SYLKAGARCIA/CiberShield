@@ -37,3 +37,7 @@ public/certificados/*.pdf
 
 # backups de base de datos generados por scripts/backup_base_datos.bat
 backups/
+
+# copias sueltas de credenciales
+/env
+/env.txt

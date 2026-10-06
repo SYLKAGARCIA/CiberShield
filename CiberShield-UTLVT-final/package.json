@@ -5,7 +5,8 @@
   "description": "Plataforma educativa de concientización en ciberseguridad para estudiantes universitarios.",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
