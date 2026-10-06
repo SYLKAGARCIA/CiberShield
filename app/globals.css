@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-surface-light text-ink-900 dark:bg-surface-dark dark:text-slate-100 transition-colors duration-300;
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+/* Accesibilidad: foco visible consistente en toda la app (WCAG) */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid theme('colors.primary.500');
+  outline-offset: 2px;
+}
+
+/* Respeta la preferencia del sistema por menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
