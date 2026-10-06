@@ -22,6 +22,8 @@ interface PublicacionFormProps {
     contenido: string;
     categoriaId: string;
     publicado: boolean;
+    imagenPortada?: string | null;
+    clasificacion?: string | null;
     metaTitulo?: string | null;
     metaDescripcion?: string | null;
   };
@@ -40,18 +42,8 @@ export function PublicacionForm({ accion, categorias, valoresIniciales }: Public
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4">
-        <SelectField
-          label="Tipo"
-          name="tipo"
-          required
-          defaultValue={valoresIniciales?.tipo ?? 'ARTICULO'}
-          opciones={[
-            { value: 'ARTICULO', label: 'Artículo' },
-            { value: 'NOTICIA', label: 'Noticia' },
-          ]}
-          error={estado.errores?.tipo}
-        />
+      <div className="grid grid-cols-1 gap-4">
+        <input type="hidden" name="tipo" value="NOTICIA" />
         <SelectField
           label="Categoría"
           name="categoriaId"
@@ -77,6 +69,28 @@ export function PublicacionForm({ accion, categorias, valoresIniciales }: Public
         defaultValue={valoresIniciales?.slug}
         error={estado.errores?.slug}
       />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <SelectField
+          label="Clasificación (solo noticias)"
+          name="clasificacion"
+          defaultValue={valoresIniciales?.clasificacion ?? ''}
+          opciones={[
+            { value: '', label: 'Sin clasificar' },
+            { value: 'NACIONAL', label: 'Nacional' },
+            { value: 'INTERNACIONAL', label: 'Internacional' },
+            { value: 'ALERTA', label: 'Alerta de ciberseguridad' },
+            { value: 'TENDENCIA', label: 'Tendencia' },
+          ]}
+          error={estado.errores?.clasificacion}
+        />
+        <TextField
+          label="Imagen de portada (URL, opcional)"
+          name="imagenPortada"
+          placeholder="https://..."
+          defaultValue={valoresIniciales?.imagenPortada ?? undefined}
+          error={estado.errores?.imagenPortada}
+        />
+      </div>
       <TextAreaField
         label="Resumen"
         name="resumen"

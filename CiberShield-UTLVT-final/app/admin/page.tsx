@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { autoevaluacionRepository } from '@/repository/autoevaluacion.repository';
 import {
   FolderTree,
   Newspaper,
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
 export default async function AdminDashboardPage() {
   // El layout (app/admin/layout.tsx) ya garantiza que hay sesión y
   // rol válido antes de llegar aquí.
-  const [usuario, categorias, publicaciones, terminos, preguntas, recursos, items, evaluaciones, certificados, insignias, banners] =
+  const [usuario, categorias, publicaciones, terminos, preguntas, recursos, items, evaluaciones, certificados, insignias, banners, resumenAuto] =
     await Promise.all([
       obtenerSesionActual(),
       categoriaRepository.findAll(),
@@ -44,11 +45,12 @@ export default async function AdminDashboardPage() {
       certificadoRepository.findAllParaAdmin(),
       insigniaRepository.findAll(),
       bannerRepository.findAll(),
+      autoevaluacionRepository.resumenGlobal(),
     ]);
 
   const tarjetas = [
-    { href: '/admin/categorias', etiqueta: 'Categorías', cantidad: categorias.length, icono: FolderTree },
-    { href: '/admin/publicaciones', etiqueta: 'Artículos y Noticias', cantidad: publicaciones.length, icono: Newspaper },
+    { href: '/admin/categorias', etiqueta: 'Módulos', cantidad: categorias.length, icono: FolderTree },
+    { href: '/admin/publicaciones', etiqueta: 'Noticias', cantidad: publicaciones.length, icono: Newspaper },
     { href: '/admin/glosario', etiqueta: 'Términos de Glosario', cantidad: terminos.length, icono: BookMarked },
     { href: '/admin/faq', etiqueta: 'Preguntas Frecuentes', cantidad: preguntas.length, icono: HelpCircle },
     { href: '/admin/recursos', etiqueta: 'Recursos', cantidad: recursos.length, icono: Library },
@@ -88,6 +90,23 @@ export default async function AdminDashboardPage() {
         ))}
       </div>
 
+      <section className="mt-8 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-surface-dark-elevated">
+        <h2 className="font-display text-lg font-semibold text-ink-900 dark:text-white">Autoevaluación: inicial vs. final</h2>
+        {!resumenAuto || resumenAuto.conInicial === 0 ? (
+          <p className="mt-2 text-sm text-ink-700 dark:text-slate-400">Aún no hay autoevaluaciones guardadas.</p>
+        ) : (
+          <dl className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {[
+              { l: 'Estudiantes con autoevaluación inicial', v: String(resumenAuto.conInicial) },
+              { l: 'Con inicial y final', v: String(resumenAuto.conAmbas) },
+              { l: 'Promedio inicial → final', v: resumenAuto.conAmbas ? `${resumenAuto.promedioInicial}% → ${resumenAuto.promedioFinal}%` : '—' },
+              { l: 'Mejora promedio', v: resumenAuto.conAmbas ? `${(resumenAuto.mejoraPromedio ?? 0) > 0 ? '+' : ''}${resumenAuto.mejoraPromedio} pts` : '—' },
+            ].map((x) => (
+              <div key={x.l}><dd className="font-display text-2xl font-semibold text-ink-900 dark:text-white">{x.v}</dd><dt className="text-xs text-ink-700 dark:text-slate-400">{x.l}</dt></div>
+            ))}
+          </dl>
+        )}
+      </section>
     </div>
   );
 }

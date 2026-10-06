@@ -51,7 +51,9 @@ export function LoginForm() {
         return;
       }
 
-      router.push(data.redirectTo ?? '/');
+      const from = new URLSearchParams(window.location.search).get('from');
+      const destinoSeguro = from && from.startsWith('/') && !from.startsWith('//') && !from.startsWith('/admin') ? from : null;
+      router.push(data.redirectTo === '/admin' ? '/admin' : destinoSeguro ?? data.redirectTo ?? '/inicio');
       router.refresh();
     } catch {
       setErrorGeneral('Ocurrió un error de conexión. Inténtalo de nuevo.');

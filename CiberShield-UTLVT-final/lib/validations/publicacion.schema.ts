@@ -12,6 +12,8 @@ export const publicacionSchema = z.object({
   resumen: z.string().max(300).optional(),
   contenido: z.string().min(20, 'El contenido debe tener al menos 20 caracteres'),
   categoriaId: z.string().min(1, 'Selecciona una categoría'),
+  imagenPortada: z.string().url('Debe ser una URL válida (https://...)').optional(),
+  clasificacion: z.enum(['NACIONAL', 'INTERNACIONAL', 'ALERTA', 'TENDENCIA']).optional(),
   publicado: z.coerce.boolean().default(false),
   metaTitulo: z.string().optional(),
   metaDescripcion: z.string().optional(),

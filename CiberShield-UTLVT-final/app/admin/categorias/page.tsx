@@ -6,7 +6,7 @@ import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { DeleteButton } from '@/components/admin/delete-button';
 import { eliminarCategoria } from './actions';
 
-export const metadata: Metadata = { title: 'Categorías | Admin' };
+export const metadata: Metadata = { title: 'Módulos | Admin' };
 
 export default async function AdminCategoriasPage() {
   const categorias = await categoriaRepository.findAll();
@@ -14,10 +14,10 @@ export default async function AdminCategoriasPage() {
   return (
     <div>
       <AdminPageHeader
-        titulo="Categorías"
+        titulo="Módulos"
         descripcion="Usadas para clasificar artículos, noticias y recursos."
         nuevoHref="/admin/categorias/nueva"
-        nuevoEtiqueta="Nueva categoría"
+        nuevoEtiqueta="Nuevo módulo"
       />
 
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-surface-dark-elevated">
@@ -61,7 +61,7 @@ export default async function AdminCategoriasPage() {
                       <DeleteButton
                         accion={eliminarCategoria}
                         id={categoria.id}
-                        etiquetaConfirmacion={`¿Eliminar la categoría "${categoria.nombre}"?`}
+                        etiquetaConfirmacion={`¿Eliminar el módulo "${categoria.nombre}"?`}
                       />
                     </div>
                   </td>

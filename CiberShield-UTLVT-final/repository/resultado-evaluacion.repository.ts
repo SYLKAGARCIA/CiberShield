@@ -11,6 +11,14 @@ class ResultadoEvaluacionRepository {
     return prisma.resultadoEvaluacion.create({ data });
   }
 
+  /** Envío idéntico reciente (doble clic / reenvío): se reutiliza en vez de duplicar. */
+  findReciente(usuarioId: string, evaluacionId: string, respuestas: string, segundos = 120) {
+    return prisma.resultadoEvaluacion.findFirst({
+      where: { usuarioId, evaluacionId, respuestas, completadoEn: { gte: new Date(Date.now() - segundos * 1000) } },
+      orderBy: { completadoEn: 'desc' },
+    });
+  }
+
   findById(id: string) {
     return prisma.resultadoEvaluacion.findUnique({
       where: { id },

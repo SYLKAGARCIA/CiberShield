@@ -33,6 +33,16 @@ class PublicacionRepository
     });
   }
 
+  /** Noticias publicadas, opcionalmente filtradas por clasificación. */
+  findNoticias(clasificacion?: string, limite?: number) {
+    return prisma.publicacion.findMany({
+      where: { tipo: 'NOTICIA', publicado: true, ...(clasificacion ? { clasificacion } : {}) },
+      include: { categoria: true },
+      orderBy: { publicadoEn: 'desc' },
+      take: limite,
+    });
+  }
+
   /** Artículos publicados de una categoría específica (por slug de categoría). */
   findPorCategoria(categoriaSlug: string) {
     return prisma.publicacion.findMany({

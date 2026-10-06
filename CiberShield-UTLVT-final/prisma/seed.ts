@@ -18,6 +18,7 @@ import { GUIAS_CORTAS } from './seed-guias-cortas';
 import { EVALUACIONES_CATEGORIAS } from './seed-evaluaciones-categorias';
 import { GLOSARIO_TERMINOS } from './seed-glosario';
 import { RECURSOS_ADICIONALES } from './seed-recursos';
+import { REEMPLAZOS_POR_ID } from './recursos-multimedia';
 
 const prisma = new PrismaClient();
 
@@ -401,15 +402,16 @@ async function seedGuiasCortas(autorId: string) {
 async function seedRecursos() {
   const categoriaContrasenas = await prisma.categoria.findUnique({ where: { slug: 'contrasenas' } });
 
+  const ejemplo = REEMPLAZOS_POR_ID.get('recurso-ejemplo-1')!;
   await prisma.recurso.upsert({
     where: { id: 'recurso-ejemplo-1' },
     update: {},
     create: {
       id: 'recurso-ejemplo-1',
-      titulo: 'Guía rápida: gestores de contraseñas',
-      descripcion: 'Comparativa de opciones gratuitas para empezar a usar un gestor de contraseñas hoy mismo.',
-      tipo: 'ENLACE',
-      url: 'https://www.eff.org/deeplinks/2016/08/password-tips',
+      titulo: ejemplo.titulo,
+      descripcion: ejemplo.descripcion,
+      tipo: ejemplo.tipo,
+      url: ejemplo.url,
       categoriaId: categoriaContrasenas?.id,
     },
   });

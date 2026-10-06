@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PREGUNTAS_POR_INTENTO } from '@/lib/evaluacion-intento';
 import Link from 'next/link';
 import { ClipboardList, ArrowUpRight } from 'lucide-react';
 import { evaluacionRepository } from '@/repository/evaluacion.repository';
@@ -74,7 +75,7 @@ export default async function EvaluacionesPage() {
                         </p>
                       )}
                       <p className="mt-1.5 text-xs text-ink-700/60 dark:text-slate-500">
-                        {evaluacion._count.preguntas} preguntas · Puntaje mínimo{' '}
+                        {Math.min(evaluacion._count.preguntas, PREGUNTAS_POR_INTENTO)} preguntas · Puntaje mínimo{' '}
                         {evaluacion.puntajeMinimo}%
                       </p>
                     </div>

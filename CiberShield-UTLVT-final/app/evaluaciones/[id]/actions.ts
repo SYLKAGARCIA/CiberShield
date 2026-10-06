@@ -7,6 +7,7 @@ import { certificadoRepository } from '@/repository/certificado.repository';
 import { generarCertificadoPDF } from '@/lib/certificado-pdf';
 import { guardarCertificadoPDF } from '@/lib/certificado-storage';
 import { obtenerSesionActual } from '@/lib/auth';
+import { prepararIntento, semillaValida } from '@/lib/evaluacion-intento';
 
 /**
  * Envía y califica una evaluación.
@@ -28,8 +29,13 @@ export async function enviarEvaluacion(evaluacionId: string, formData: FormData)
     redirect('/evaluaciones');
   }
 
+  // Mismas preguntas que se le mostraron (se recalculan desde la semilla).
+  const semilla = formData.get('semilla');
+  if (!semillaValida(semilla)) redirect(`/evaluaciones/${evaluacionId}/realizar`);
+  const preguntasIntento = prepararIntento(evaluacion.preguntas, semilla);
+
   let correctas = 0;
-  const detalleRespuestas = evaluacion.preguntas.map((pregunta) => {
+  const detalleRespuestas = preguntasIntento.map((pregunta) => {
     const opcionSeleccionadaId = formData.get(`pregunta_${pregunta.id}`)?.toString() ?? null;
     const opcionCorrecta = pregunta.opciones.find((o) => o.esCorrecta);
     const esCorrecta = opcionSeleccionadaId !== null && opcionSeleccionadaId === opcionCorrecta?.id;
@@ -46,19 +52,27 @@ export async function enviarEvaluacion(evaluacionId: string, formData: FormData)
     };
   });
 
-  const totalPreguntas = evaluacion.preguntas.length;
+  const totalPreguntas = preguntasIntento.length;
   const puntaje = totalPreguntas > 0 ? Math.round((correctas / totalPreguntas) * 100) : 0;
   const aprobado = puntaje >= evaluacion.puntajeMinimo;
+
+  const respuestasJson = JSON.stringify(detalleRespuestas);
+
+  // Anti-duplicados: si es el mismo envío (doble clic, recarga), se reutiliza el resultado.
+  const repetido = await resultadoEvaluacionRepository.findReciente(usuario.id, evaluacion.id, respuestasJson);
+  if (repetido) redirect(`/evaluaciones/${evaluacionId}/resultado/${repetido.id}`);
 
   const resultado = await resultadoEvaluacionRepository.create({
     usuarioId: usuario.id,
     evaluacionId: evaluacion.id,
     puntaje,
     aprobado,
-    respuestas: JSON.stringify(detalleRespuestas),
+    respuestas: respuestasJson,
   });
 
-  if (aprobado) {
+  // Un solo certificado por estudiante y evaluación (el primero que apruebe).
+  const yaTiene = aprobado && (await certificadoRepository.existeParaEvaluacion(usuario.id, evaluacion.id));
+  if (aprobado && !yaTiene) {
     await emitirCertificado(usuario.id, usuario.name, evaluacion.titulo, puntaje, resultado.id);
   }
 

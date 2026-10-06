@@ -6,7 +6,6 @@ import { evaluacionRepository } from '@/repository/evaluacion.repository';
 
 const RUTAS_ESTATICAS = [
   { ruta: '/inicio', prioridad: 1.0, frecuencia: 'weekly' as const },
-  { ruta: '/sobre-ciberseguridad', prioridad: 0.8, frecuencia: 'monthly' as const },
   { ruta: '/amenazas', prioridad: 0.9, frecuencia: 'weekly' as const },
   { ruta: '/buenas-practicas', prioridad: 0.8, frecuencia: 'monthly' as const },
   { ruta: '/herramientas', prioridad: 0.8, frecuencia: 'monthly' as const },
@@ -16,7 +15,11 @@ const RUTAS_ESTATICAS = [
   { ruta: '/herramientas/calculadora-seguridad', prioridad: 0.6, frecuencia: 'yearly' as const },
   { ruta: '/herramientas/checklist', prioridad: 0.6, frecuencia: 'yearly' as const },
   { ruta: '/evaluaciones', prioridad: 0.8, frecuencia: 'weekly' as const },
-  { ruta: '/recursos', prioridad: 0.7, frecuencia: 'weekly' as const },
+  { ruta: '/modulos', prioridad: 0.9, frecuencia: 'weekly' as const },
+  { ruta: '/biblioteca', prioridad: 0.7, frecuencia: 'weekly' as const },
+  { ruta: '/casos-practicos', prioridad: 0.6, frecuencia: 'monthly' as const },
+  { ruta: '/autoevaluacion', prioridad: 0.6, frecuencia: 'monthly' as const },
+  { ruta: '/foro', prioridad: 0.5, frecuencia: 'daily' as const },
   { ruta: '/noticias', prioridad: 0.8, frecuencia: 'daily' as const },
   { ruta: '/glosario', prioridad: 0.7, frecuencia: 'monthly' as const },
   { ruta: '/faq', prioridad: 0.6, frecuencia: 'monthly' as const },
@@ -40,7 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const paginasCategorias: MetadataRoute.Sitemap = categorias.map((categoria) => ({
-    url: `${SITE_URL}/amenazas/${categoria.slug}`,
+    url: `${SITE_URL}/modulos/${categoria.slug}`,
     changeFrequency: 'monthly',
     priority: 0.7,
   }));

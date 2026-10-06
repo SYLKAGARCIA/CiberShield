@@ -18,6 +18,21 @@ class CategoriaRepository
     return prisma.categoria.findMany({ orderBy: { nombre: 'asc' } });
   }
 
+  /** Categorías con conteo de lecciones (artículos publicados) y recursos, para mostrarlas como módulos. */
+  findAllConConteos() {
+    return prisma.categoria.findMany({
+      orderBy: { nombre: 'asc' },
+      include: {
+        _count: {
+          select: {
+            publicaciones: { where: { tipo: 'ARTICULO', publicado: true } },
+            recursos: true,
+          },
+        },
+      },
+    });
+  }
+
   findById(id: string): Promise<Categoria | null> {
     return prisma.categoria.findUnique({ where: { id } });
   }

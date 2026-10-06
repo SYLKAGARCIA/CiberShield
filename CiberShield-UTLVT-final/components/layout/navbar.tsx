@@ -1,63 +1,35 @@
 import Link from 'next/link';
-import { ShieldCheck, LayoutDashboard } from 'lucide-react';
-import { menuRepository } from '@/repository/menu.repository';
+import { ShieldCheck } from 'lucide-react';
+import { categoriaRepository } from '@/repository/categoria.repository';
 import { obtenerSesionActual, tieneAccesoAdmin } from '@/lib/auth';
-import { ThemeToggle } from '@/components/layout/theme-toggle';
-import { MobileNav } from '@/components/layout/mobile-nav';
-import { LogoutButton } from '@/components/admin/logout-button';
+import { ordenarModulos } from '@/lib/modulos-data';
+import { MainNav } from '@/components/layout/main-nav';
 import { NavbarVisibility } from '@/components/layout/navbar-visibility';
+import { Breadcrumbs } from '@/components/layout/breadcrumbs';
 
 export async function Navbar() {
-  const [items, usuario] = await Promise.all([
-    menuRepository.findByUbicacion('HEADER'),
-    obtenerSesionActual(),
-  ]);
-
-  const esStaff = tieneAccesoAdmin(usuario?.role.name);
-  const mostrarArticulosNoticias = !!usuario && !esStaff;
+  const [categorias, usuario] = await Promise.all([categoriaRepository.findAll(), obtenerSesionActual()]);
+  const modulos = ordenarModulos(categorias).map((c) => ({ slug: c.slug, nombre: c.nombre, descripcion: c.descripcion }));
 
   return (
     <NavbarVisibility>
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-surface-dark-elevated">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link
-            href={esStaff ? '/admin' : '/inicio'}
-            className="flex items-center gap-2"
-          >
-            <ShieldCheck className="text-primary-500" size={20} aria-hidden="true" />
-            <span className="font-display text-base font-semibold text-ink-900 dark:text-white">
-              {esStaff ? 'Panel Administrativo' : usuario ? 'Estudiante' : 'CiberShield UTLVT'}
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-md dark:border-slate-800 dark:bg-surface-dark-elevated/90">
+        <div className="mx-auto flex max-w-[88rem] items-center gap-4 px-4 py-3 sm:px-6">
+          <Link href="/inicio" className="flex shrink-0 items-center gap-2" aria-label="CiberShield UTLVT — inicio">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-500 text-white shadow-md shadow-primary-900/20">
+              <ShieldCheck size={19} aria-hidden="true" />
+            </span>
+            <span className="font-display text-base font-semibold leading-none text-ink-900 dark:text-white">
+              CiberShield <span className="text-seguro-500">UTLVT</span>
             </span>
           </Link>
-
-          <div className="flex items-center gap-4">
-            {usuario ? (
-              <>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-ink-900 dark:text-white">
-                    {usuario.name}
-                  </p>
-                  <p className="font-mono text-xs uppercase tracking-widest text-seguro-600 dark:text-seguro-400">
-                    {usuario.role.name}
-                  </p>
-                </div>
-                <LogoutButton />
-              </>
-            ) : (
-              <Link
-                href="/login"
-                className="flex items-center gap-1.5 text-sm font-medium text-ink-700 hover:text-primary-600 dark:text-slate-300 dark:hover:text-white"
-              >
-                <LayoutDashboard size={15} aria-hidden="true" />
-                Acceder
-              </Link>
-            )}
-
-            <ThemeToggle />
-            <MobileNav items={items} mostrarArticulosNoticias={mostrarArticulosNoticias} />
-          </div>
+          <MainNav
+            modulos={modulos}
+            usuario={usuario ? { name: usuario.name, rol: usuario.role.name, esStaff: tieneAccesoAdmin(usuario.role.name) } : null}
+          />
         </div>
       </header>
+      <Breadcrumbs />
     </NavbarVisibility>
   );
 }

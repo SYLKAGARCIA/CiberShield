@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
-    redirectTo: tieneAccesoAdmin(usuario.role.name) ? '/admin' : '/evaluaciones',
+    redirectTo: tieneAccesoAdmin(usuario.role.name) ? '/admin' : '/inicio',
     usuario: { name: usuario.name, rol: usuario.role.name },
   });
 }

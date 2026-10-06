@@ -11,7 +11,7 @@ export default async function NuevaPublicacionPage() {
 
   return (
     <div>
-      <AdminPageHeader titulo="Nueva publicación" />
+      <AdminPageHeader titulo="Nueva noticia" />
       <PublicacionForm accion={crearPublicacion} categorias={categorias} />
     </div>
   );

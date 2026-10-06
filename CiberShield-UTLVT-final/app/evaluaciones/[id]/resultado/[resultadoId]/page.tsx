@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { CheckCircle2, XCircle, Download, ExternalLink } from 'lucide-react';
+import { CheckCircle2, XCircle, Download, ExternalLink, ArrowRight, PartyPopper } from 'lucide-react';
+import { categoriaRepository } from '@/repository/categoria.repository';
+import { ordenarModulos } from '@/lib/modulos-data';
 import { resultadoEvaluacionRepository } from '@/repository/resultado-evaluacion.repository';
 import { obtenerSesionActual } from '@/lib/auth';
 
@@ -21,6 +23,19 @@ export default async function ResultadoEvaluacionPage({ params }: PageProps) {
   // — nadie debería poder ver el resultado de otra persona cambiando
   // el ID en la URL.
   if (!resultado || resultado.usuarioId !== usuario.id) notFound();
+
+  // Siguiente módulo: la evaluación `evaluacion-<slug>` pertenece al módulo <slug>.
+  let siguiente: { slug: string; nombre: string } | null = null;
+  let esUltimo = false;
+  if (resultado.evaluacionId.startsWith('evaluacion-')) {
+    const slugActual = resultado.evaluacionId.replace('evaluacion-', '');
+    const modulos = ordenarModulos<{ slug: string; nombre: string }>(await categoriaRepository.findAll());
+    const i = modulos.findIndex((m) => m.slug === slugActual);
+    if (i >= 0) {
+      if (i < modulos.length - 1) siguiente = modulos[i + 1];
+      else esUltimo = true;
+    }
+  }
 
   return (
     <div className="mx-auto max-w-lg px-6 py-20 text-center">
@@ -83,6 +98,25 @@ export default async function ResultadoEvaluacionPage({ params }: PageProps) {
           >
             Ver certificado verificable
             <ExternalLink size={13} aria-hidden="true" />
+          </Link>
+        )}
+
+        {siguiente && (
+          <Link
+            href={`/modulos/${siguiente.slug}`}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-500/25 transition-colors hover:bg-primary-600"
+          >
+            Continuar con el siguiente módulo: {siguiente.nombre}
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        )}
+        {esUltimo && (
+          <Link
+            href="/autoevaluacion"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary-500 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-600"
+          >
+            <PartyPopper size={16} aria-hidden="true" />
+            ¡Último módulo! Continúa con la autoevaluación final
           </Link>
         )}
 

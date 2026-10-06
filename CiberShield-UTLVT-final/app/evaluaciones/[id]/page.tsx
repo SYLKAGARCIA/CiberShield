@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PREGUNTAS_POR_INTENTO } from '@/lib/evaluacion-intento';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ClipboardList, Clock, Target } from 'lucide-react';
@@ -39,7 +40,7 @@ export default async function EvaluacionIntroPage({ params }: PageProps) {
       <div className="mt-8 flex justify-center gap-8">
         <div className="flex items-center gap-2 text-sm text-ink-700 dark:text-slate-400">
           <ClipboardList size={16} aria-hidden="true" />
-          {evaluacion.preguntas.length} preguntas
+          {Math.min(evaluacion.preguntas.length, PREGUNTAS_POR_INTENTO)} preguntas (distintas en cada intento)
         </div>
         <div className="flex items-center gap-2 text-sm text-ink-700 dark:text-slate-400">
           <Target size={16} aria-hidden="true" />

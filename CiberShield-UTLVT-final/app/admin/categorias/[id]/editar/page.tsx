@@ -5,7 +5,7 @@ import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { CategoriaForm } from '../../categoria-form';
 import { actualizarCategoria } from '../../actions';
 
-export const metadata: Metadata = { title: 'Editar Categoría | Admin' };
+export const metadata: Metadata = { title: 'Editar Módulo | Admin' };
 
 interface PageProps {
   params: { id: string };

@@ -13,7 +13,7 @@ const initialMessage: Message = {
   text: '¡Hola! Soy CiberShield IA 👋. Puedo ayudarte a aprender sobre ciberseguridad, phishing, ingeniería social, software malicioso, contraseñas y buenas prácticas. ¿Qué quieres aprender?',
 };
 
-const suggestions = ['¿Qué es el phishing?', '¿Cómo protejo mi cuenta?', '¿Qué es el malware?'];
+const suggestions = ['¿Qué es el phishing?', '¿Cómo protejo mi cuenta?', '¿Qué hago si caí en una estafa?', '¿Cómo creo una contraseña segura?'];
 
 export function CiberShieldChatbot() {
   const [open, setOpen] = useState(false);
@@ -72,7 +72,7 @@ export function CiberShieldChatbot() {
           aria-label="CiberShield IA"
           className="fixed bottom-24 right-4 z-[90] flex h-[min(620px,calc(100vh-120px))] w-[min(390px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-surface-dark"
         >
-          <header className="flex items-center justify-between bg-primary-500 px-4 py-3 text-white">
+          <header className="flex items-center justify-between bg-gradient-to-r from-primary-600 to-primary-500 px-4 py-3 text-white">
             <div className="flex items-center gap-3">
               <div className="rounded-xl bg-white/15 p-2">
                 <ShieldCheck size={22} aria-hidden="true" />

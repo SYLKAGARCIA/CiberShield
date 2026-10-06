@@ -15,6 +15,8 @@ function parsear(formData: FormData) {
     resumen: formData.get('resumen') || undefined,
     contenido: formData.get('contenido'),
     categoriaId: formData.get('categoriaId'),
+    imagenPortada: formData.get('imagenPortada') || undefined,
+    clasificacion: formData.get('clasificacion') || undefined,
     publicado: formData.get('publicado') === 'on',
     metaTitulo: formData.get('metaTitulo') || undefined,
     metaDescripcion: formData.get('metaDescripcion') || undefined,
@@ -25,6 +27,8 @@ function parsear(formData: FormData) {
 function revalidarSitioPublico(tipo: 'ARTICULO' | 'NOTICIA', slug?: string) {
   revalidatePath('/admin/publicaciones');
   revalidatePath('/amenazas');
+  revalidatePath('/modulos');
+  revalidatePath('/inicio');
   revalidatePath('/noticias');
   revalidatePath('/');
   if (slug) {

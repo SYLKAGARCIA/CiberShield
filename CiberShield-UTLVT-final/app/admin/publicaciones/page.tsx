@@ -4,57 +4,21 @@ import { Pencil } from 'lucide-react';
 import { publicacionRepository } from '@/repository/publicacion.repository';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { DeleteButton } from '@/components/admin/delete-button';
-import { cn } from '@/lib/utils';
 import { eliminarPublicacion } from './actions';
 
-export const metadata: Metadata = { title: 'Artículos y Noticias | Admin' };
+export const metadata: Metadata = { title: 'Noticias | Admin' };
 
-const FILTROS = [
-  { valor: undefined, etiqueta: 'Todos' },
-  { valor: 'ARTICULO', etiqueta: 'Artículos' },
-  { valor: 'NOTICIA', etiqueta: 'Noticias' },
-] as const;
-
-interface PageProps {
-  searchParams: { tipo?: string };
-}
-
-export default async function AdminPublicacionesPage({ searchParams }: PageProps) {
-  const tipoActivo = searchParams.tipo as 'ARTICULO' | 'NOTICIA' | undefined;
-
-  const publicaciones = await publicacionRepository.findParaAdmin(tipoActivo);
+export default async function AdminPublicacionesPage() {
+  const publicaciones = await publicacionRepository.findParaAdmin('NOTICIA');
 
   return (
     <div>
       <AdminPageHeader
-        titulo="Artículos y Noticias"
-        descripcion="Ambos comparten el mismo modelo de datos, filtra por tipo abajo."
+        titulo="Noticias"
+        descripcion="Gestiona las noticias que se muestran en la sección Noticias del sitio."
         nuevoHref="/admin/publicaciones/nueva"
-        nuevoEtiqueta="Nueva publicación"
+        nuevoEtiqueta="Nueva noticia"
       />
-
-      <div className="mb-4 flex gap-2">
-        {FILTROS.map((filtro) => {
-          const activo = tipoActivo === filtro.valor;
-          const href = filtro.valor
-            ? `/admin/publicaciones?tipo=${filtro.valor}`
-            : '/admin/publicaciones';
-          return (
-            <Link
-              key={filtro.etiqueta}
-              href={href}
-              className={cn(
-                'rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
-                activo
-                  ? 'bg-seguro-500 text-white'
-                  : 'bg-slate-100 text-ink-700 hover:bg-primary-50 dark:bg-surface-dark-elevated dark:text-slate-400'
-              )}
-            >
-              {filtro.etiqueta}
-            </Link>
-          );
-        })}
-      </div>
 
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-surface-dark-elevated">
         <table className="w-full text-left text-sm">
@@ -71,7 +35,7 @@ export default async function AdminPublicacionesPage({ searchParams }: PageProps
             {publicaciones.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-4 py-8 text-center text-ink-700/60 dark:text-slate-500">
-                  No hay publicaciones todavía.
+                  No hay noticias todavía.
                 </td>
               </tr>
             ) : (

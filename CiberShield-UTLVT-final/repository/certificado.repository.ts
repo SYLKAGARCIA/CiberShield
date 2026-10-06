@@ -13,6 +13,14 @@ class CertificadoRepository {
     return prisma.certificado.create({ data });
   }
 
+  async existeParaEvaluacion(usuarioId: string, evaluacionId: string) {
+    const c = await prisma.certificado.findFirst({
+      where: { usuarioId, resultado: { evaluacionId } },
+      select: { id: true },
+    });
+    return !!c;
+  }
+
   actualizarPdfUrl(id: string, archivoPdfUrl: string) {
     return prisma.certificado.update({ where: { id }, data: { archivoPdfUrl } });
   }

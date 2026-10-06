@@ -75,6 +75,11 @@ model User {
   insignias     UsuarioInsignia[]
   sesiones      Session[]
 
+  progresoModulos ProgresoModulo[]
+  foroHilos       ForoHilo[]
+  foroRespuestas  ForoRespuesta[]
+  autoevaluaciones IntentoAutoevaluacion[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -115,6 +120,7 @@ model Categoria {
 
   publicaciones Publicacion[]
   recursos      Recurso[]
+  progresos     ProgresoModulo[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -144,6 +150,9 @@ model Publicacion {
   resumen       String?
   contenido     String
   imagenPortada String?
+  // Clasificación de noticias: "NACIONAL" | "INTERNACIONAL" | "ALERTA" | "TENDENCIA"
+  // (opcional; solo aplica a tipo NOTICIA).
+  clasificacion String?
   publicado     Boolean   @default(false)
   publicadoEn   DateTime?
 
@@ -314,6 +323,49 @@ model Certificado {
   @@map("certificados")
 }
 
+// Autoevaluación: se guarda cada intento para comparar la inicial con la final.
+// tipo: "INICIAL" (primer intento) | "FINAL" (con todos los módulos completados) | "PRACTICA".
+model IntentoAutoevaluacion {
+  id         String   @id @default(cuid())
+  usuarioId  String
+  usuario    User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tipo       String
+  aciertos   Int
+  total      Int
+  porcentaje Int
+  detalle    String // JSON: [{ slug, ok, total }] por módulo
+  createdAt  DateTime @default(now())
+
+  @@index([usuarioId])
+  @@map("intentos_autoevaluacion")
+}
+
+// Banco de preguntas de la Autoevaluación (inicial y final usan el mismo banco).
+// Se gestiona desde /admin/autoevaluaciones y lo lee /autoevaluacion.
+// Misma forma que `Escenario` (lib/escenarios-data.ts), de donde salen las preguntas
+// iniciales (se precargan en la migración con los mismos ids: is1, ph1, ...).
+// `opciones` = textos de las respuestas; `correcta` = índice (0..n-1) de la segura.
+// `orden` = orden dentro de su módulo (el estudiante ve los módulos en el orden del curso).
+model PreguntaAutoevaluacion {
+  id          String   @id @default(cuid())
+  moduloSlug  String // slug de la Categoria (módulo) a la que pertenece
+  amenazaSlug String? // amenaza relacionada (/amenazas/[slug]), opcional
+  tema        String
+  titulo      String
+  situacion   String
+  opciones    String[]
+  correcta    Int
+  explicacion String
+  orden       Int      @default(0)
+  activa      Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([activa, orden])
+  @@map("preguntas_autoevaluacion")
+}
+
 // ============================================================
 // 9. INSIGNIAS (gamificación)
 // ============================================================
@@ -447,4 +499,57 @@ model ContenidoInicio {
   updatedAt DateTime @updatedAt
 
   @@map("contenido_inicio")
+}
+
+// ============================================================
+// 14. MÓDULOS: PROGRESO DEL ESTUDIANTE
+// ============================================================
+// Un "módulo" es una Categoria presentada como unidad educativa.
+// Esta tabla guarda qué módulos marcó como completados cada estudiante.
+
+model ProgresoModulo {
+  usuarioId    String
+  usuario      User      @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  categoriaId  String
+  categoria    Categoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+  completadoEn DateTime  @default(now())
+
+  @@id([usuarioId, categoriaId])
+  @@index([categoriaId])
+  @@map("progreso_modulos")
+}
+
+// ============================================================
+// 15. FORO
+// ============================================================
+
+model ForoHilo {
+  id        String @id @default(cuid())
+  titulo    String
+  contenido String
+  autorId   String
+  autor     User   @relation(fields: [autorId], references: [id], onDelete: Cascade)
+
+  respuestas ForoRespuesta[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([autorId])
+  @@map("foro_hilos")
+}
+
+model ForoRespuesta {
+  id        String   @id @default(cuid())
+  hiloId    String
+  hilo      ForoHilo @relation(fields: [hiloId], references: [id], onDelete: Cascade)
+  contenido String
+  autorId   String
+  autor     User     @relation(fields: [autorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([hiloId])
+  @@index([autorId])
+  @@map("foro_respuestas")
 }

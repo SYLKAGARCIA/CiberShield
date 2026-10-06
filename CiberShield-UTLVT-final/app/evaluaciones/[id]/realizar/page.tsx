@@ -3,10 +3,14 @@ import { notFound, redirect } from 'next/navigation';
 import { evaluacionRepository } from '@/repository/evaluacion.repository';
 import { obtenerSesionActual } from '@/lib/auth';
 import { enviarEvaluacion } from '../actions';
+import { BotonEnviar } from './boton-enviar';
+import { nuevaSemilla, prepararIntento } from '@/lib/evaluacion-intento';
 
 interface PageProps {
   params: { id: string };
 }
+
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = { title: 'Realizar Evaluación' };
 
@@ -16,6 +20,9 @@ export default async function RealizarEvaluacionPage({ params }: PageProps) {
 
   const evaluacion = await evaluacionRepository.findParaRendir(params.id);
   if (!evaluacion || !evaluacion.activa) notFound();
+
+  const semilla = nuevaSemilla();
+  const preguntas = prepararIntento(evaluacion.preguntas, semilla);
 
   const enviarConId = enviarEvaluacion.bind(null, evaluacion.id);
 
@@ -31,7 +38,8 @@ export default async function RealizarEvaluacionPage({ params }: PageProps) {
       </div>
 
       <form action={enviarConId} className="space-y-8">
-        {evaluacion.preguntas.map((pregunta, index) => (
+        <input type="hidden" name="semilla" value={semilla} />
+        {preguntas.map((pregunta, index) => (
           <fieldset
             key={pregunta.id}
             className="rounded-lg border border-slate-200 p-5 dark:border-slate-800"
@@ -59,12 +67,7 @@ export default async function RealizarEvaluacionPage({ params }: PageProps) {
           </fieldset>
         ))}
 
-        <button
-          type="submit"
-          className="inline-flex items-center rounded-lg bg-seguro-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-seguro-500/25 transition-colors hover:bg-seguro-600"
-        >
-          Enviar respuestas
-        </button>
+        <BotonEnviar />
       </form>
     </div>
   );

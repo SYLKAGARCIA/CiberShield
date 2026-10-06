@@ -6,6 +6,8 @@
  * Se importa y siembra desde seed.ts (ver seedRecursos).
  */
 
+import { REEMPLAZOS_POR_ID } from './recursos-multimedia';
+
 export interface RecursoSeed {
   id: string;
   titulo: string;
@@ -15,7 +17,7 @@ export interface RecursoSeed {
   categoriaSlug: string;
 }
 
-export const RECURSOS_ADICIONALES: RecursoSeed[] = [
+const RECURSOS_BASE: RecursoSeed[] = [
   {
     id: 'recurso-haveibeenpwned',
     titulo: 'Have I Been Pwned — revisa si tu correo fue filtrado',
@@ -245,4 +247,31 @@ export const RECURSOS_ADICIONALES: RecursoSeed[] = [
     url: 'https://www.youtube.com/watch?v=KxHpkrSJ6_k',
     categoriaSlug: 'redes-sociales',
   },
+  {
+    id: 'recurso-video-contrasenas-robustas',
+    titulo: 'Video: Contraseñas robustas (OSI-INCIBE)',
+    descripcion: 'Cómo crear contraseñas robustas, fáciles de recordar y distintas para cada cuenta.',
+    tipo: 'VIDEO',
+    url: 'https://www.youtube.com/watch?v=n0vvSJJCFbs',
+    categoriaSlug: 'contrasenas',
+  },
+  {
+    id: 'recurso-video-wifi-publico',
+    titulo: 'Video: ¿Qué riesgos existen al conectarse a una red wifi pública?',
+    descripcion: 'Reportaje (NMás) sobre los riesgos de usar redes Wi-Fi públicas y cómo protegerte.',
+    tipo: 'VIDEO',
+    url: 'https://www.youtube.com/watch?v=OHqaUZkli_c',
+    categoriaSlug: 'redes-wifi',
+  },
+  {
+    id: 'recurso-video-proteccion-datos',
+    titulo: 'Video: La protección de datos es tu derecho, conócelo (AEPD)',
+    descripcion: 'La Agencia Española de Protección de Datos explica por qué tus datos personales importan.',
+    tipo: 'VIDEO',
+    url: 'https://www.youtube.com/watch?v=lRozhQS6kN8',
+    categoriaSlug: 'privacidad-datos',
+  },
 ];
+
+/** Lista final: los recursos tipo ENLACE se sirven como VIDEO/PDF (ver recursos-multimedia.ts). */
+export const RECURSOS_ADICIONALES: RecursoSeed[] = RECURSOS_BASE.map((r) => REEMPLAZOS_POR_ID.get(r.id) ?? r);

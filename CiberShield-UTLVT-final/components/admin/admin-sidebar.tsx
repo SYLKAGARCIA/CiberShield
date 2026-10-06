@@ -14,6 +14,7 @@ import {
   Star,
   Home,
   GalleryHorizontal,
+  Target,
 } from 'lucide-react';
 
 type SeccionAdmin = {
@@ -28,12 +29,13 @@ const SECCIONES: SeccionAdmin[] = [
   { href: '/admin', etiqueta: 'Dashboard', icono: LayoutDashboard, exact: true },
   { href: '/admin/contenido-inicio', etiqueta: 'Contenido de Inicio', icono: Home, soloAdmin: true },
   { href: '/admin/banners', etiqueta: 'Banners', icono: GalleryHorizontal },
-  { href: '/admin/categorias', etiqueta: 'Categorías', icono: FolderTree },
-  { href: '/admin/publicaciones', etiqueta: 'Artículos y Noticias', icono: Newspaper },
+  { href: '/admin/categorias', etiqueta: 'Módulos (categorías)', icono: FolderTree },
+  { href: '/admin/publicaciones', etiqueta: 'Noticias', icono: Newspaper },
   { href: '/admin/glosario', etiqueta: 'Glosario', icono: BookMarked },
   { href: '/admin/faq', etiqueta: 'Preguntas Frecuentes', icono: HelpCircle },
   { href: '/admin/recursos', etiqueta: 'Recursos', icono: Library },
   { href: '/admin/evaluaciones', etiqueta: 'Evaluaciones', icono: ClipboardList },
+  { href: '/admin/autoevaluaciones', etiqueta: 'Autoevaluaciones', icono: Target },
   { href: '/admin/certificados', etiqueta: 'Certificados', icono: Award },
   { href: '/admin/insignias', etiqueta: 'Insignias', icono: Star },
   { href: '/admin/menus', etiqueta: 'Menús', icono: MenuIcon },
